@@ -1,0 +1,40 @@
+# SolderLibConfig.cmake.in
+# Configuration file for SolderLib
+
+# Define paths
+set(SolderLib_LIB_DIR "@CMAKE_INSTALL_PREFIX@/lib")
+set(SolderLib_INCLUDE_DIR "@CMAKE_INSTALL_PREFIX@/include")
+
+# Create the imported target
+if(NOT TARGET SolderLib::solder)
+    add_library(SolderLib::solder STATIC IMPORTED)
+
+    # Set library location and include directories
+    set_target_properties(SolderLib::solder PROPERTIES
+        IMPORTED_LOCATION "${SolderLib_LIB_DIR}/libsolder.a"
+        INTERFACE_INCLUDE_DIRECTORIES "${SolderLib_INCLUDE_DIR};${SolderLib_INCLUDE_DIR}/photon"
+    )
+
+    # Find and link required system dependencies
+    find_package(Threads REQUIRED)
+    set_property(TARGET SolderLib::solder APPEND PROPERTY
+        INTERFACE_LINK_LIBRARIES Threads::Threads
+    )
+
+    # Add rt library on Linux for timing functions
+    if(UNIX AND NOT APPLE)
+        set_property(TARGET SolderLib::solder APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES rt dl
+        )
+    endif()
+
+    # Add required system libraries for PhotonLibOS
+    if(UNIX)
+        set_property(TARGET SolderLib::solder APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES m
+        )
+    endif()
+endif()
+
+set(SolderLib_FOUND TRUE)
+check_required_components(SolderLib)
